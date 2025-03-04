@@ -85,14 +85,10 @@ end
 
 ---
 
-## TDD Demo
-
----
-
 ## Философия
 
 * маленькие шаги
-* постоянный Рефакторинг
+* постоянный рефакторинг
 * эволюционный дизайн
 * исполняемая документация
 * минимальность кода
@@ -102,7 +98,7 @@ end
 ## Ошибки TDD
 
 * написание теста в конце
-* Выбор большого шага
+* выбор большого шага
 
 ---
 
@@ -216,7 +212,6 @@ end
 
 ---
 
-
 ## subject nested
 
 ```ruby
@@ -246,8 +241,8 @@ describe "Episode duration" do
   end
 
   context "when validation errors" do
-    it "is not valid without title
-    it "is not valid without author
+    it "is not valid without title"
+    it "is not valid without author"
   end
 end
 ```
@@ -290,29 +285,72 @@ end
 
 ---
 
-## eq / be / be_truthey
+## Matchers
 
 ---
 
-## match / start_with / end_with / include
+## eq
+
+
+```ruby
+expect(1).to eq(1)
+expect(1).to eql(1)
+expect(1).to equal(1)
+```
 
 ---
 
-## вложенные блоки 
+## be_a
 
-hash_including / array_include /...
+```ruby
+expect(1).to be_a(Number)
+expect(1).to be_an(Integer)
+expect(1).to be_a_kind_of(Number)
+```
 
 ---
 
-# raise
+## be_*
+
+```ruby
+expect(found_item).to be_nil # found_item.nil?
+expect(episode).to be_published # episode.published?
+```
+
+---
+
+## match / start_with / end_with
+
+```ruby
+expect("Long Title).to match(/Title.+/)
+expect("Long Title").to match("Long")
+expect("Title with dot.").to end_with(".")
+expect("Title Here").to start_with("Title")
+```
+
+---
+
+## raise
+
+```ruby
+expect { do_something_risky }.to raise_error
+expect { do_something_risky }.to raise_error(PoorRiskDecisionError)
+```
 
 ---
 
 ## change
 
+```ruby
+expect { podcast.add_episode(episode) }.to change(podcast, :size).from(0).to(1)
+expect { podcast.add_episode(episode) }.to change(podcast, :size).to(1)
+expect { podcast.remove_episode(episode) }.to change(podcast, :size).by(-1)
+expect { podcast.add_episode(episode) }.to change{ podcast.reload.size }.by(1)
+```
+
 ---
 
-## custome matcher
+## custom matcher
 
 
 ```ruby
@@ -330,21 +368,82 @@ end
 
 ---
 
-# mocks / stubs
+## alias_matcher
+
+```ruby
+RSpec::Matchers.alias_matcher :be_empty, :be_nil
+
+expect(search_results).to be_empty
+```
+
+---
+
+## match partial
+
+```ruby
+hash = {
+  a: {
+    b: ["foo", 5],
+    c: { d: 2.05 }
+  }
+}
+expect(hash).to match(
+  a: {
+    b: a_collection_containing_exactly(
+      a_string_starting_with("f"),
+      an_instance_of(Fixnum)
+    ),
+    c: { d: (a_value < 3) }
+  }
+)
+```
+
+---
+
+## Тестирование Requsts
+
+---
+
+## Первый запрос
+
+```ruby
+describe "GET /index" do
+  it "works" do
+    get podcasts_url
+  end
+end
+```
 
 ---
 
 
-## Тестирование Requsts
 
-* тестирование всей структуры
-* ожидание только важного
+```ruby
+describe "GET /index" do
+  it "renders a successful response" do
+    get podcasts_url
+    expect(response).to be_successful
+  end
+end
+```
+
+---
+
+## Практика
+
+* request
+* response
+    * header
+    * body
+    * status
+* side effect
 * авторизация
 
 ---
 
 ## Ошибки тестирования Requests
 
+* ожидание только важного
 * тестирование валидации
 * тестирование i18n
 * тестирование Model
@@ -356,7 +455,7 @@ end
 
 * чистый код
 * тест как история
-* Arracnge Act Assert
+* Arrange Act Assert
 * быстрый
 * независимый
 * повторяемый
@@ -365,7 +464,61 @@ end
 
 ---
 
+## Рефакторинг
+
+---
+
+## shared_exmple
+
+
+```ruby
+RSpec.shared_examples 'engine startable' do
+  it 'starts engine' do
+    expect(subject.start_engine).to eq(true)
+  end
+end
+
+it_behaves_like 'engine startable'
+include_examples 'engine startable'
+```
+
+---
+
+## share-context
+
+```ruby
+RSpec.shared_context 'order setup' do
+  let(:item1) { double('Item', price: 10) }
+  let(:item2) { double('Item', price: 20) }
+  let(:order) { Order.new([item1, item2]) }
+end
+include_context 'order setup'
+```
+
+---
+
+## matcher
+
+```ruby
+RSpec::Matchers.define :include_item do |id|
+  match do |subject|
+    subject.map(&:id).to include(id)
+  end
+end
+
+it { is_expected.to inlucde_item(podcast.id) }
+```
+
+---
+
+## def
+
+
+---
 
 ## Link 
 
-* https://tddmanifesto.com/
+* [TDD Manifesto](https://tddmanifesto.com/)
+* [RSpec matchers](https://rspec.info/documentation/3.0/rspec-expectations/RSpec/Matchers)
+* [Rails Function Tests](https://guides.rubyonrails.org/testing.html#functional-testing-for-controllers)
+* [Rspec Mocks](https://rspec.info/documentation/3.13/rspec-mocks/)
